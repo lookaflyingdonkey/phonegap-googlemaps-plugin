@@ -271,6 +271,10 @@
     cordova.exec(null, this.errorHandler, PLUGIN_NAME, 'closeDialog', []);
   };
   
+  App.prototype.setOptions = function(options) {
+    cordova.exec(null, this.errorHandler, PLUGIN_NAME, 'exec', ['Map.setOptions', options]);
+  };
+  
   App.prototype.setCenter = function(latLng) {
     this.set('center', latLng);
     cordova.exec(null, this.errorHandler,
@@ -316,8 +320,12 @@
    * @params {Function} [callback] This callback is involved when the animation is completed.
    */
   App.prototype.animateCamera = function(cameraPosition, callback) {
-    var self = this;
+    if (cameraPosition.target &&
+        cameraPosition.target.type === "LatLngBounds") {
+      cameraPosition.target = [cameraPosition.target.southwest, cameraPosition.target.northeast];
+    }
  
+    var self = this;
     cordova.exec(function() {
       if (typeof callback === "function") {
         callback.call(self);
@@ -330,7 +338,10 @@
    * @params {Function} [callback] This callback is involved when the animation is completed.
    */
   App.prototype.moveCamera = function(cameraPosition, callback) {
-    var argsLength = arguments.length;
+    if (cameraPosition.target &&
+        cameraPosition.target.type === "LatLngBounds") {
+      cameraPosition.target = [cameraPosition.target.southwest, cameraPosition.target.northeast];
+    }
     var self = this;
     cordova.exec(function() {
       if (typeof callback === "function") {
@@ -405,6 +416,19 @@
   
   App.prototype.refreshLayout = function() {
     onMapResize(undefined, false);
+  };
+  
+  App.prototype.isAvailable = function(callback) {
+    var self = this;
+    cordova.exec(function() {
+      if (typeof callback === "function") {
+        callback.call(self, true);
+      }
+    }, function(message) {
+      if (typeof callback === "function") {
+        callback.call(self, false, message);
+      }
+    }, PLUGIN_NAME, 'isAvailable', []);
   };
   
   App.prototype.toDataURL = function(callback) {
@@ -653,13 +677,12 @@
       geocoderRequest.position.lat = geocoderRequest.position.lat || 0.0;
       geocoderRequest.position.lng = geocoderRequest.position.lng || 0.0;
     }
-    var geocoderCallback = function(results) {
-      if (typeof callback === "function") {
-        callback.call(self,  results);
-      }
-    };
     var pluginExec = function() {
-      cordova.exec(geocoderCallback, geocoderCallback, PLUGIN_NAME, 'exec', ['Geocoder.createGeocoder', geocoderRequest]);
+      cordova.exec(function(results) {
+        if (typeof callback === "function") {
+          callback.call(self,  results);
+        }
+      }, self.errorHandler, PLUGIN_NAME, 'exec', ['Geocoder.createGeocoder', geocoderRequest]);
     };
     
     pluginExec();
@@ -1266,7 +1289,10 @@
    * LatLngBounds Class
    *****************************************************************************/
   var LatLngBounds = function() {
-    Array.apply(this);
+    Object.defineProperty(this, "type", {
+      value: "LatLngBounds",
+      writable: false
+    });
     
     var args = [];
     if (arguments.length === 1 &&
@@ -1278,40 +1304,53 @@
     }
     for (var i = 0; i < args.length; i++) {
       if ("lat" in args[i] && "lng" in args[i]) {
-        this.push(args[i]);
+        this.extend(args[i]);
       }
     }
   };
-  
-  LatLngBounds.prototype = new Array;
-  
-  LatLngBounds.prototype.northeast = new LatLng(0, 0);
-  LatLngBounds.prototype.southwest = new LatLng(0, 0);
+    
+  LatLngBounds.prototype.northeast = null;
+  LatLngBounds.prototype.southwest = null;
   
   LatLngBounds.prototype.toString = function() {
-    return "[[" + this.northeast.toUrlValue() + "],[" + this.southwest.toUrlValue() + "]]";
+    return "[[" + this.southwest.toString() + "],[" + this.northeast.toString() + "]]";
+  };
+  LatLngBounds.prototype.toUrlValue = function(precision) {
+    return "[[" + this.southwest.toUrlValue(precision) + "],[" + this.northeast.toUrlValue(precision) + "]]";
   };
   
   LatLngBounds.prototype.extend = function(latLng) {
     if ("lat" in latLng && "lng" in latLng) {
-      this.push(latLng);
+      if (!this.southwest && !this.northeast) {
+        this.southwest = latLng;
+        this.northeast = latLng;
+      } else {
+        var swLat = Math.min(latLng.lat, this.southwest.lat);
+        var swLng = Math.min(latLng.lng, this.southwest.lng);
+        var neLat = Math.max(latLng.lat, this.northeast.lat);
+        var neLng = Math.max(latLng.lng, this.northeast.lng);
+        
+        delete this.southwest;
+        delete this.northeast;
+        this.southwest = new LatLng(swLat, swLng);
+        this.northeast = new LatLng(neLat, neLng);
+      }
+      this[0] = this.southwest;
+      this[1] = this.northeast;
     }
   };
-  LatLngBounds.prototype.contains = function(latLng, callback) {
+  LatLngBounds.prototype.getCenter = function() {
+    return new LatLng(
+            (this.southwest.lat + this.northeast.lat) / 2,
+            (this.southwest.lng + this.northeast.lng) / 2);
+  };
+  
+  LatLngBounds.prototype.contains = function(latLng) {
     if (!("lat" in latLng) || !("lng" in latLng)) {
-      return;
+      return false;
     }
-    var self = this,
-        bounds = [];
-    for (var i = 0; i < this.length; i++) {
-      bounds.push(this[i]);
-    }
-    
-    cordova.exec(function(isContains) {
-      if (typeof callback === "function") {
-        callback.call(self, isContains === "true");
-      }
-    }, self.errorHandler, PLUGIN_NAME, 'exec', ['LatLngBounds.contains', bounds, latLng]);
+    return (latLng.lat >= this.southwest.lat) && (latLng.lat <= this.northeast.lat) &&
+           (latLng.lng >= this.southwest.lng) && (latLng.lng <= this.northeast.lng);
   };
   
   /*****************************************************************************

@@ -310,9 +310,9 @@
 - (void)resizeMap:(CDVInvokedUrlCommand *)command {
   self.mapCtrl.embedRect = [command.arguments objectAtIndex:0];
   BOOL animated = NO;
-  if ([command.arguments count] == 2) {
-    animated = [[command.arguments objectAtIndex: 1] boolValue];
-  }
+  //if ([command.arguments count] == 2) {
+  //  animated = [[command.arguments objectAtIndex: 1] boolValue];
+  //}
   [self.mapCtrl updateMapViewLayout:animated];
 }
 
@@ -417,6 +417,15 @@
   [locationManager startUpdatingLocation];
     
   CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK messageAsDictionary:json];
+  [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
+}
+
+/**
+ * Return always success
+ */
+-(void)isAvailable:(CDVInvokedUrlCommand *)command
+{
+  CDVPluginResult* pluginResult = [CDVPluginResult resultWithStatus:CDVCommandStatus_OK];
   [self.commandDelegate sendPluginResult:pluginResult callbackId:command.callbackId];
 }
 @end
