@@ -282,13 +282,7 @@
     cordova.exec(null, this.errorHandler, PLUGIN_NAME, 'exec', ['Map.setZoom', zoom]);
   };
  
-  App.prototype.clear = function(callback) {
-    cordova.exec(function(location) {
-      if (typeof callback === "function") {
-        callback();
-      }
-    }, self.errorHandler, PLUGIN_NAME, 'exec', ['Map.clear']);
-  };
+  
   /**
    * @desc Change the map type
    * @param {String} mapTypeId   Specifies the one of the follow strings:
@@ -626,6 +620,24 @@
           callback.call(self,  kmlOverlay, self);
         }
       }, self.errorHandler, PLUGIN_NAME, 'exec', ['KmlOverlay.createKmlOverlay', kmlOverlayOptions]);
+    };
+    
+    pluginExec();
+  };
+  
+  
+  //-------------
+  // IFrame Layer
+  //-------------
+  App.prototype.addIframeOverlay = function(options, callback) {
+    var self = this;
+    options = options || {};
+    options.src = options.src || null;
+ 
+    var pluginExec = function() {
+      cordova.exec(function(kmlId) {
+        
+      }, self.errorHandler, PLUGIN_NAME, 'exec', ['IframeOverlay.createIframeOverlay', options]);
     };
     
     pluginExec();

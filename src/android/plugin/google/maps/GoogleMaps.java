@@ -14,6 +14,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -36,6 +37,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
+import android.webkit.WebView;
 import android.widget.AbsoluteLayout;
 import android.widget.FrameLayout;
 import android.widget.FrameLayout.LayoutParams;
@@ -92,7 +94,7 @@ public class GoogleMaps extends CordovaPlugin implements View.OnClickListener, O
   }
   
   private JSONObject mapDivLayoutJSON = null;
-  private MapView mapView = null;
+  public MapView mapView = null;
   public GoogleMap map = null;
   private Activity activity;
   private LinearLayout windowLayer = null;
@@ -101,6 +103,7 @@ public class GoogleMaps extends CordovaPlugin implements View.OnClickListener, O
   private final int LICENSE_LINK_ID = 0x7f99991; //random
   public LocationClient locationClient = null;
 
+  @SuppressLint("NewApi")
   @Override
   public void initialize(CordovaInterface cordova, final CordovaWebView webView) {
     super.initialize(cordova, webView);

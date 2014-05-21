@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script type="text/javascript" src="../cordova.js"></script>
+    <script type="text/javascript">
+      window.onerror = function(message, file, line) {
+        var error = [];
+        error.push('---[error]');
+        if (typeof message == "object") {
+          var keys = Object.keys(message);
+          keys.forEach(function(key) {
+            error.push('[' + key + '] ' + message[key]);
+          });
+        } else {
+          error.push(line + ' at ' + file);
+          error.push(message);
+        }
+        alert(error.join("\n"));
+      };
+
+      document.addEventListener("deviceready", function() {
+        console.log("-----deviceready");
+        
+        var button = document.getElementById("button");
+        button.addEventListener("click", function() {
+          var map = plugin.google.maps.getMap();
+          
+          map.addMarker({
+            'position': GOOGLE_TOKYO,
+            'title': "Hello GoogleMap for Cordova!",
+            'icon' : {
+              'url': 'www/images/google_tokyo_icon.png',
+              'anchor': [90, 30]
+            },
+            
+            'infoWindowAnchor': [10, 20]
+          });
+        });
+      });
+    </script>
+    <style type="text/css">
+      body {background-color:red;}
+    </style>
+    
+    
+  </head>
+  
+  <body>
+    <input type="button" id="button" value="Hello"/> 
+  </body>
+  
+</html>
