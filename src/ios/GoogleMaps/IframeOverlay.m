@@ -23,6 +23,7 @@
   
   CGRect bounds = CGRectMake(0, 0, 100, 50);
   UIWebView *iframeView = [[UIWebView alloc] initWithFrame:bounds];
+  iframeView.delegate = self.webView.delegate;
   [self.mapCtrl.view addSubview:iframeView];
   
   

@@ -9,6 +9,7 @@
 #import "GoogleMaps.h"
 #import "MyPlgunProtocol.h"
 #import "PluginUtil.h"
+#import "IframeDelegate.h"
 
 @interface IframeOverlay : CDVPlugin<MyPlgunProtocol>
 
